@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Power BI Style Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: #0b1220;
+            color: white;
+        }
+
+        .header {
+            background: #111827;
+            padding: 15px;
+            text-align: center;
+            font-size: 20px;
+        }
+
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px;
+            background: #0f172a;
+        }
+
+        select {
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            padding: 15px;
+        }
+
+        .card {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .card h2 {
+            color: #38bdf8;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 15px;
+            padding: 15px;
+        }
+
+        .box {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        th, td {
+            border: 1px solid #334155;
+            padding: 6px;
+            text-align: center;
+        }
+
+        th {
+            background: #0f172a;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="header">Sales Analytics Dashboard (Power BI Style)</div>
+
+<div class="filters">
+    <select id="productFilter" onchange="updateDashboard()">
+        <option value="All">All Products</option>
+    </select>
+
+    <select id="regionFilter" onchange="updateDashboard()">
+        <option value="All">All Regions</option>
+    </select>
+</div>
+
+<div class="cards">
+    <div class="card">
+        <div>Total Revenue</div>
+        <h2 id="revenue">0</h2>
+    </div>
+
+    <div class="card">
+        <div>Top Product</div>
+        <h2 id="topProduct">-</h2>
+    </div>
+
+    <div class="card">
+        <div>Top Customer</div>
+        <h2 id="topCustomer">-</h2>
+    </div>
+
+    <div class="card">
+        <div>Top Region</div>
+        <h2 id="topRegion">-</h2>
+    </div>
+</div>
+
+<div class="grid">
+
+    <div class="box">
+        <canvas id="lineChart"></canvas>
+        <canvas id="barChart"></canvas>
+        <canvas id="pieChart"></canvas>
+    </div>
+
+    <div class="box">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th><th>Customer</th><th>Product</th>
+                    <th>Region</th><th>Qty</th><th>Price</th><th>Date</th>
+                </tr>
+            </thead>
+            <tbody id="table"></tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+
+let sales = [
+{id:1,customer:"Ravi",product:"Mobile",region:"South",qty:2,price:15000,date:"2026-01-01"},
+{id:2,customer:"Sneha",product:"Laptop",region:"North",qty:1,price:55000,date:"2026-01-02"},
+{id:3,customer:"Amit",product:"Headphones",region:"East",qty:3,price:2000,date:"2026-01-03"},
+{id:4,customer:"Divya",product:"Tablet",region:"West",qty:2,price:20000,date:"2026-01-04"},
+{id:5,customer:"Kiran",product:"Mobile",region:"South",qty:1,price:15000,date:"2026-01-05"},
+{id:6,customer:"Arjun",product:"Laptop",region:"North",qty:1,price:55000,date:"2026-01-06"},
+{id:7,customer:"Meera",product:"Mobile",region:"East",qty:2,price:15000,date:"2026-01-07"},
+{id:8,customer:"Vikram",product:"Tablet",region:"West",qty:2,price:20000,date:"2026-01-08"},
+{id:9,customer:"Ananya",product:"Headphones",region:"South",qty:4,price:2000,date:"2026-01-09"},
+{id:10,customer:"Rahul",product:"Laptop",region:"North",qty:1,price:55000,date:"2026-01-10"},
+{id:11,customer:"Priya",product:"Mobile",region:"West",qty:3,price:15000,date:"2026-01-11"},
+{id:12,customer:"Suresh",product:"Tablet",region:"South",qty:1,price:20000,date:"2026-01-12"},
+{id:13,customer:"Kavya",product:"Laptop",region:"East",qty:1,price:55000,date:"2026-01-13"},
+{id:14,customer:"Manoj",product:"Mobile",region:"North",qty:2,price:15000,date:"2026-01-14"},
+{id:15,customer:"Deepa",product:"Headphones",region:"West",qty:5,price:2000,date:"2026-01-15"},
+{id:16,customer:"Sanjay",product:"Laptop",region:"South",qty:2,price:55000,date:"2026-01-16"},
+{id:17,customer:"Pooja",product:"Tablet",region:"East",qty:1,price:20000,date:"2026-01-17"},
+{id:18,customer:"Varun",product:"Mobile",region:"North",qty:3,price:15000,date:"2026-01-18"},
+{id:19,customer:"Nisha",product:"Laptop",region:"West",qty:1,price:55000,date:"2026-01-19"},
+{id:20,customer:"Rakesh",product:"Mobile",region:"South",qty:2,price:15000,date:"2026-01-20"},
+{id:21,customer:"Swathi",product:"Tablet",region:"East",qty:2,price:20000,date:"2026-01-21"},
+{id:22,customer:"Harsha",product:"Laptop",region:"North",qty:1,price:55000,date:"2026-01-22"},
+{id:23,customer:"Lakshmi",product:"Mobile",region:"West",qty:2,price:15000,date:"2026-01-23"},
+{id:24,customer:"Teja",product:"Headphones",region:"South",qty:3,price:2000,date:"2026-01-24"},
+{id:25,customer:"Bhavya",product:"Laptop",region:"East",qty:1,price:55000,date:"2026-01-25"},
+{id:26,customer:"Gopi",product:"Tablet",region:"North",qty:2,price:20000,date:"2026-01-26"},
+{id:27,customer:"Ishita",product:"Mobile",region:"West",qty:1,price:15000,date:"2026-01-27"},
+{id:28,customer:"Naveen",product:"Laptop",region:"South",qty:1,price:55000,date:"2026-01-28"},
+{id:29,customer:"Aishwarya",product:"Tablet",region:"East",qty:3,price:20000,date:"2026-01-29"},
+{id:30,customer:"Chaitanya",product:"Mobile",region:"North",qty:2,price:15000,date:"2026-01-30"},
+{id:31,customer:"Rekha",product:"Laptop",region:"West",qty:1,price:55000,date:"2026-01-31"},
+{id:32,customer:"Aditya",product:"Mobile",region:"South",qty:2,price:15000,date:"2026-02-01"},
+{id:33,customer:"Snehal",product:"Tablet",region:"East",qty:1,price:20000,date:"2026-02-02"},
+{id:34,customer:"Tarun",product:"Laptop",region:"North",qty:1,price:55000,date:"2026-02-03"},
+{id:35,customer:"Keerthi",product:"Headphones",region:"West",qty:5,price:2000,date:"2026-02-04"},
+{id:36,customer:"Lokesh",product:"Mobile",region:"South",qty:1,price:15000,date:"2026-02-05"},
+{id:37,customer:"Sowmya",product:"Laptop",region:"East",qty:2,price:55000,date:"2026-02-06"},
+{id:38,customer:"Abhinav",product:"Tablet",region:"North",qty:1,price:20000,date:"2026-02-07"},
+{id:39,customer:"Geetha",product:"Mobile",region:"West",qty:3,price:15000,date:"2026-02-08"},
+{id:40,customer:"Pranav",product:"Laptop",region:"South",qty:1,price:55000,date:"2026-02-09"},
+{id:41,customer:"Harini",product:"Tablet",region:"East",qty:2,price:20000,date:"2026-02-10"},
+{id:42,customer:"Mahesh",product:"Mobile",region:"North",qty:2,price:15000,date:"2026-02-11"},
+{id:43,customer:"Divakar",product:"Laptop",region:"West",qty:1,price:55000,date:"2026-02-12"},
+{id:44,customer:"Rithika",product:"Headphones",region:"South",qty:4,price:2000,date:"2026-02-13"},
+{id:45,customer:"Surya",product:"Tablet",region:"East",qty:1,price:20000,date:"2026-02-14"},
+{id:46,customer:"Varsha",product:"Mobile",region:"North",qty:2,price:15000,date:"2026-02-15"},
+{id:47,customer:"Ganesh",product:"Laptop",region:"West",qty:1,price:55000,date:"2026-02-16"},
+{id:48,customer:"Siri",product:"Tablet",region:"South",qty:2,price:20000,date:"2026-02-17"},
+{id:49,customer:"Nithin",product:"Mobile",region:"East",qty:1,price:15000,date:"2026-02-18"},
+{id:50,customer:"Bhavana",product:"Laptop",region:"North",qty:2,price:55000,date:"2026-02-19"}
+];
+
+let filtered = [...sales];
+
+function compute(data) {
+
+    let revenue = 0;
+    let product = {};
+    let customer = {};
+    let region = {};
+    let month = {};
+
+    data.forEach(s => {
+        let total = s.qty * s.price;
+        revenue += total;
+
+        product[s.product] = (product[s.product] || 0) + total;
+        customer[s.customer] = (customer[s.customer] || 0) + total;
+        region[s.region] = (region[s.region] || 0) + total;
+
+        let m = s.date.substring(0,7);
+        month[m] = (month[m] || 0) + total;
+    });
+
+    let top = (obj) => Object.keys(obj).reduce((a,b)=>obj[a]>obj[b]?a:b);
+
+    document.getElementById("revenue").innerText = revenue;
+    document.getElementById("topProduct").innerText = top(product);
+    document.getElementById("topCustomer").innerText = top(customer);
+    document.getElementById("topRegion").innerText = top(region);
+
+    drawTable(data);
+    drawCharts(month, product, region);
+}
+
+function drawTable(data) {
+    let t = "";
+    data.forEach(s=>{
+        t += `<tr>
+            <td>${s.id}</td>
+            <td>${s.customer}</td>
+            <td>${s.product}</td>
+            <td>${s.region}</td>
+            <td>${s.qty}</td>
+            <td>${s.price}</td>
+            <td>${s.date}</td>
+        </tr>`;
+    });
+    document.getElementById("table").innerHTML = t;
+}
+
+let line, bar, pie;
+
+function drawCharts(month, product, region) {
+
+    if(line) line.destroy();
+    if(bar) bar.destroy();
+    if(pie) pie.destroy();
+
+    line = new Chart(document.getElementById("lineChart"), {
+        type: "line",
+        data: {
+            labels: Object.keys(month),
+            datasets: [{ data: Object.values(month) }]
+        }
+    });
+
+    bar = new Chart(document.getElementById("barChart"), {
+        type: "bar",
+        data: {
+            labels: Object.keys(product),
+            datasets: [{ data: Object.values(product) }]
+        }
+    });
+
+    pie = new Chart(document.getElementById("pieChart"), {
+        type: "pie",
+        data: {
+            labels: Object.keys(region),
+            datasets: [{ data: Object.values(region) }]
+        }
+    });
+}
+
+function initFilters() {
+
+    let p = new Set();
+    let r = new Set();
+
+    sales.forEach(s=>{
+        p.add(s.product);
+        r.add(s.region);
+    });
+
+    let pf = document.getElementById("productFilter");
+    let rf = document.getElementById("regionFilter");
+
+    p.forEach(x=> pf.innerHTML += `<option>${x}</option>`);
+    r.forEach(x=> rf.innerHTML += `<option>${x}</option>`);
+}
+
+function updateDashboard() {
+
+    let p = document.getElementById("productFilter").value;
+    let r = document.getElementById("regionFilter").value;
+
+    filtered = sales.filter(s =>
+        (p === "All" || s.product === p) &&
+        (r === "All" || s.region === r)
+    );
+
+    compute(filtered);
+}
+
+initFilters();
+compute(sales);
+
+</script>
+
+</body>
+</html>
